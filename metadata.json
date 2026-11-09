@@ -1,0 +1,6 @@
+{
+  "name": "TeleCom & Network Studio",
+  "description": "Plateforme interactive de simulation, d'ingénierie et d'apprentissage pour les Réseaux et Télécommunications.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
