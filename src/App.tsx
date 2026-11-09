@@ -7,6 +7,7 @@ import { DeviceModal } from './components/DeviceModal';
 import { PacketInspector } from './components/PacketInspector';
 import { SubnetCalculatorModal } from './components/SubnetCalculatorModal';
 import { PacketInjectionModal } from './components/PacketInjectionModal';
+import { DatabaseModal } from './components/DatabaseModal';
 import { ScenariosView } from './components/ScenariosView';
 import { PRESET_SCENARIOS } from './data/presetScenarios';
 import {
@@ -42,6 +43,8 @@ export default function App() {
   // Modals
   const [showPingModal, setShowPingModal] = useState(false);
   const [showSubnetModal, setShowSubnetModal] = useState(false);
+  const [showDbModal, setShowDbModal] = useState(false);
+  const [autoSaveToDb, setAutoSaveToDb] = useState(true);
   const [injectionSourceDevice, setInjectionSourceDevice] = useState<NetworkDevice | undefined>(undefined);
 
   // Simulation engine state
@@ -161,6 +164,15 @@ export default function App() {
 
         if (newCaptured.length > 0) {
           setCapturedPackets((prev) => [...prev, ...newCaptured]);
+
+          // Auto-save captured frames to MySQL database 'analyse'
+          if (autoSaveToDb) {
+            fetch('/api/mysql/save-packets', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ packets: newCaptured })
+            }).catch(() => {});
+          }
         }
 
         return hasChanges ? newPackets : prevPackets;
@@ -168,7 +180,7 @@ export default function App() {
     }, 40);
 
     return () => clearInterval(interval);
-  }, [isSimulating, simSpeed, devices, packets.length]);
+  }, [isSimulating, simSpeed, devices, packets.length, autoSaveToDb]);
 
   // Load a scenario
   const handleSelectScenario = (scenario: ScenarioPreset) => {
@@ -399,6 +411,7 @@ export default function App() {
           setInjectionSourceDevice(undefined);
           setShowPingModal(true);
         }}
+        onOpenDbModal={() => setShowDbModal(true)}
         packetCount={capturedPackets.length}
       />
 
@@ -481,6 +494,21 @@ export default function App() {
         <PacketInspector
           packets={capturedPackets}
           onClearCapture={() => setCapturedPackets([])}
+          onOpenDbModal={() => setShowDbModal(true)}
+          onQuickSaveToDb={async () => {
+            if (capturedPackets.length === 0) return;
+            try {
+              const res = await fetch('/api/mysql/save-packets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ packets: capturedPackets })
+              });
+              const data = await res.json();
+              setLastSimEvent(data.message || `${capturedPackets.length} paquets enregistrés en BDD.`);
+            } catch (e: any) {
+              setLastSimEvent(`Erreur BDD : ${e.message}`);
+            }
+          }}
         />
       )}
 
@@ -517,6 +545,21 @@ export default function App() {
       {showSubnetModal && (
         <SubnetCalculatorModal
           onClose={() => setShowSubnetModal(false)}
+        />
+      )}
+
+      {/* MySQL Database Manager Modal */}
+      {showDbModal && (
+        <DatabaseModal
+          onClose={() => setShowDbModal(false)}
+          currentPackets={capturedPackets}
+          onLoadPacketsFromDb={(loaded) => {
+            setCapturedPackets(loaded);
+            setActiveTab('wireshark');
+            setLastSimEvent(`${loaded.length} trames restaurées depuis la base de données.`);
+          }}
+          autoSaveToDb={autoSaveToDb}
+          setAutoSaveToDb={setAutoSaveToDb}
         />
       )}
     </div>

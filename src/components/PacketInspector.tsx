@@ -9,18 +9,24 @@ import {
   Layers,
   FileCode,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Database,
+  Save
 } from 'lucide-react';
 import { CapturedPacket, PacketHeaders } from '../types/network';
 
 interface PacketInspectorProps {
   packets: CapturedPacket[];
   onClearCapture: () => void;
+  onOpenDbModal?: () => void;
+  onQuickSaveToDb?: () => void;
 }
 
 export const PacketInspector: React.FC<PacketInspectorProps> = ({
   packets,
-  onClearCapture
+  onClearCapture,
+  onOpenDbModal,
+  onQuickSaveToDb
 }) => {
   const [selectedPacketId, setSelectedPacketId] = useState<string | null>(
     packets.length > 0 ? packets[packets.length - 1].id : null
@@ -129,6 +135,29 @@ export const PacketInspector: React.FC<PacketInspectorProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {onQuickSaveToDb && (
+            <button
+              onClick={onQuickSaveToDb}
+              disabled={packets.length === 0}
+              className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-sm"
+              title="Enregistrer toutes les trames dans la base de données MySQL analyse"
+            >
+              <Save className="w-3.5 h-3.5" />
+              <span>Enregistrer en BDD ({packets.length})</span>
+            </button>
+          )}
+
+          {onOpenDbModal && (
+            <button
+              onClick={onOpenDbModal}
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-medium text-cyan-300 flex items-center gap-1.5 transition-colors"
+              title="Gérer la base de données MySQL 'analyse'"
+            >
+              <Database className="w-3.5 h-3.5 text-cyan-400" />
+              <span>BDD : analyse</span>
+            </button>
+          )}
+
           <button
             onClick={handleExportJson}
             disabled={packets.length === 0}

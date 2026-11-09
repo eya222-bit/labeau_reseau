@@ -5,6 +5,7 @@ interface HeaderProps {
   activeTab: 'canvas' | 'scenarios' | 'subnet' | 'wireshark';
   setActiveTab: (tab: 'canvas' | 'scenarios' | 'subnet' | 'wireshark') => void;
   onOpenPingModal: () => void;
+  onOpenDbModal: () => void;
   packetCount: number;
 }
 
@@ -12,6 +13,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeTab,
   setActiveTab,
   onOpenPingModal,
+  onOpenDbModal,
   packetCount
 }) => {
   return (
@@ -78,8 +80,16 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
       </nav>
 
-      {/* Zone 3: 1 primary action */}
+      {/* Zone 3: Actions */}
       <div className="flex items-center gap-3 shrink-0">
+        <button
+          onClick={onOpenDbModal}
+          className="px-3.5 py-2 text-xs font-semibold text-slate-200 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg shadow-sm flex items-center gap-2 whitespace-nowrap shrink-0 transition-colors"
+        >
+          <span className="w-2 h-2 rounded-full bg-cyan-400" />
+          <span>BDD MySQL (analyse)</span>
+        </button>
+
         <button
           onClick={onOpenPingModal}
           className="px-4 py-2 text-xs font-semibold text-slate-950 bg-cyan-400 hover:bg-cyan-300 rounded-lg shadow-sm shadow-cyan-400/20 transition-all flex items-center gap-2 whitespace-nowrap shrink-0 active:scale-95"
